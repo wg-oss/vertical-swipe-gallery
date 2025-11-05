@@ -45,17 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const slide = document.createElement('div');
             slide.className = 'slide';
             slide.dataset.index = index;
-            slide.style.transform = `translateY(${index * 100}%)`;
             
             const slideContent = document.createElement('div');
             slideContent.className = 'slide-content';
             
             // Check if this is a landscape image (not first or last)
             const isLandscape = index > 0 && index < images.length - 1;
-            
-            // Create container for the image
-            const panel = document.createElement('div');
-            panel.className = 'slide-panel';
             
             // Create the image
             const img = document.createElement('img');
@@ -65,36 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
             img.style.pointerEvents = 'none';
             
             if (isLandscape) {
-                // For landscape images, make it wider and enable horizontal scrolling
+                // For landscape images
                 img.style.width = '200%';
                 img.style.height = '100%';
                 img.style.objectFit = 'cover';
                 img.style.objectPosition = 'left center';
                 
-                // Enable horizontal scrolling
-                slideContent.style.overflowX = 'auto';
-                slideContent.style.touchAction = 'pan-x';
-                
-                // Add a class to identify landscape slides
+                // Add landscape class to the slide content
                 slideContent.classList.add('landscape-slide');
             } else {
-                // For portrait images, use normal sizing
+                // For portrait images
                 img.style.width = '100%';
-                img.style.height = 'auto';
+                img.style.height = '100%';
                 img.style.objectFit = 'contain';
-                
-                // Disable horizontal scrolling
-                slideContent.style.overflowX = 'hidden';
-                slideContent.style.touchAction = 'pan-y';
             }
             
-            panel.appendChild(img);
-            slideContent.appendChild(panel);
+            slideContent.appendChild(img);
             slide.appendChild(slideContent);
             gallery.appendChild(slide);
-            
-            slide.appendChild(slideContent);
-            gallery.appendChild(slide);
+        });
+        
+        // Position slides vertically
+        const slides = document.querySelectorAll('.slide');
+        slides.forEach((slide, index) => {
+            slide.style.transform = `translateY(${index * 100}%)`;
         });
         
         createNavDots();
@@ -153,8 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
             isLandscapeSlide = false;
         }
         
-        // Don't prevent default to allow native scrolling
-        // e.preventDefault();
+        // Prevent default to stop any page scrolling
+        e.preventDefault();
     }
 
     function handleTouchMove(e) {
@@ -166,14 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = startX - currentX;
         const diffY = startY - currentY;
         
-        // Only process if we haven't determined the direction yet or it's a horizontal pan
+        // If we haven't determined the direction yet
         if (!isHorizontalPan && isLandscapeSlide) {
-            // Check if this is a horizontal pan
-            if (Math.abs(diffX) > 10) {
+            // Check if this is a horizontal pan (more horizontal than vertical movement)
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 5) {
                 isHorizontalPan = true;
-            } else if (Math.abs(diffY) > 10) {
-                // Vertical swipe - let it propagate
-                return;
             }
         }
         
@@ -190,7 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // For vertical swipes (non-landscape or intentional vertical swipes)
         if (!isHorizontalPan && Math.abs(diffY) > 10) {
-            // Allow vertical swipe to change slides
+            // Prevent default to stop any page scrolling
+            e.preventDefault();
             return;
         }
     }
@@ -203,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const endX = touch.clientX;
         const diffY = startY - endY;
         const diffX = startX - endX;
-        const threshold = 10; // Reduced threshold for better responsiveness
+        const threshold = 20; // Threshold for detecting swipes
         
         // Handle vertical swipe to change slides
         if (!isHorizontalPan && Math.abs(diffY) > threshold) {

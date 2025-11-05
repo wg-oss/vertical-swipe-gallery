@@ -14,6 +14,8 @@ body, html {
 html, body {
     width: 100%;
     height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: black;
@@ -21,14 +23,17 @@ html, body {
     -webkit-touch-callout: none;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
+    touch-action: none; /* Disable default touch actions */
 }
 
 .gallery {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .slide {
@@ -40,8 +45,9 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: transform 0.4s ease-out;
+    transition: transform 0.3s ease-out;
     will-change: transform;
+    touch-action: pan-y;
     overflow: hidden;
 }
 
@@ -49,14 +55,21 @@ html, body {
     position: relative;
     width: 100%;
     height: 100%;
-    display: flex;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+/* Landscape slide specific styles */
+.slide-content.landscape-slide {
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x mandatory;
+    touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
+}
+
+.slide-content.landscape-slide::-webkit-scrollbar {
+    display: none;
 }
 
 .slide-content::-webkit-scrollbar {
@@ -80,28 +93,39 @@ html, body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    touch-action: pan-y;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: black;
 }
 
+.landscape-slide .slide-panel {
+    width: 200%;
+    height: 100%;
+    touch-action: pan-x;
+}
+
 .slide-panel img {
     display: block;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
     max-width: 100%;
     max-height: 100%;
     width: auto;
     height: auto;
     object-fit: contain;
     object-position: center;
-    pointer-events: none;
-    -webkit-user-drag: none;
-    margin: 0 auto;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+}
+
+.landscape-slide .slide-panel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left center;
 }
 
 /* Landscape slides with horizontal panning */
