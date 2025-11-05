@@ -132,28 +132,34 @@ html, body {
 .landscape-slide {
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    position: relative;
-}
-
-.landscape-slide .slide-panel {
-    display: flex;
-    width: 200%;
-    height: 100%;
-    transition: transform 0.3s ease-out;
-    will-change: transform;
-}
-
-.landscape-slide .slide-panel img {
-    width: 50%;
     height: 100%;
     flex-shrink: 0;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+    background-color: black;
+}
+
+/* Landscape slides with two-panel layout */
+.landscape-slide {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Ensure the image is fully visible in its container */
+.landscape-slide .slide-panel {
+    width: 600%; /* Double the width to accommodate full image */
+}
+
+.landscape-slide .slide-panel img {
+    width: 25%; /* Each image takes 25% of the container (100% / 4 panels) */
+    object-fit: contain; /* Ensure full image is visible */
+    object-position: center;
 }
 
 /* Hide scrollbar */

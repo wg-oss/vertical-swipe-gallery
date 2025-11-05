@@ -197,8 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Handle horizontal swipe for landscape slides (takes priority)
         if (isHorizontalPan && isLandscapeSlide) {
-            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
-            if (slideContent) {
+            const slidePanel = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-panel`);
+            if (slidePanel) {
                 const viewportWidth = window.innerWidth;
                 const minSwipeDistance = viewportWidth * 0.1; // 10% of viewport width
                 
@@ -206,20 +206,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (Math.abs(diffX) > minSwipeDistance) {
                     // Determine direction and update panel
                     if (diffX > 0) {
-                        // Swipe left - go to next panel
-                        currentPanel = Math.min(currentPanel + 1, 1);
+                        // Swipe left - go to next panel (right side)
+                        currentPanel = 1;
                     } else {
-                        // Swipe right - go to previous panel
-                        currentPanel = Math.max(currentPanel - 1, 0);
+                        // Swipe right - go to previous panel (left side)
+                        currentPanel = 0;
                     }
                 }
                 
                 // Animate to the target panel
-                const targetScroll = currentPanel * viewportWidth;
-                slideContent.scrollTo({
-                    left: targetScroll,
-                    behavior: 'smooth'
-                });
+                const targetPosition = currentPanel * -50; // 0% for left panel, -50% for right panel
+                slidePanel.style.transform = `translateX(${targetPosition}%)`;
                 
                 e.preventDefault();
             }
