@@ -73,19 +73,9 @@ html, body {
 
 /* Landscape slide specific styles */
 .slide-content.landscape-slide {
-    overflow-x: auto;
-    overflow-y: hidden;
-    touch-action: pan-x;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-}
-
-.slide-content.landscape-slide::-webkit-scrollbar {
-    display: none;
-}
-
-.slide-content::-webkit-scrollbar {
-    display: none;
+    overflow: hidden;
+    touch-action: pan-y;
+    position: relative;
 }
 
 .slide-content.landscape {
@@ -111,21 +101,7 @@ html, body {
     background-color: black;
 }
 
-.landscape-slide .slide-panel {
-    width: auto;
-    height: auto;
-    max-width: 200%;
-    max-height: 95vh;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    aspect-ratio: 2/1;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* Removed duplicate rule */
 
 .slide-panel img {
     display: block;
@@ -144,16 +120,14 @@ html, body {
 }
 
 .landscape-slide .slide-panel img {
-    width: 50vw;
-    height: auto;
-    max-height: 95vh;
+    width: 50%;
+    height: 100%;
     object-fit: contain;
-    object-position: center;
-    background: black;
+    object-position: left center;
     flex-shrink: 0;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    display: block;
 }
 
 /* Landscape slides with horizontal panning */
@@ -165,34 +139,26 @@ html, body {
     background: black;
 }
 
-.landscape-slide::-webkit-scrollbar {
-    display: none;
-}
-
 .landscape-slide .slide-panel {
     width: 200%;
     height: 100%;
     display: flex;
-}
-
-.landscape-slide .slide-panel {
-    width: 200%;
-    height: 100%;
-    display: flex;
+    position: relative;
+    transition: transform 0.3s ease-out;
 }
 
 .landscape-slide .slide-panel img {
     width: 50%;
     height: 100%;
-    flex-shrink: 0;
     object-fit: contain;
     object-position: left center;
+    flex-shrink: 0;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+    margin: 0;
+    padding: 0;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
