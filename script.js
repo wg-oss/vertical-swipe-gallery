@@ -1,11 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const gallery = document.querySelector('.gallery');
     let currentSlide = 0;
-    let startY = 0;
-    let startX = 0;
-    let startScrollLeft = 0;
+    // Track touch state
+    let touchStartX = 0;
+    let touchStartY = 0;
     let isSwiping = false;
-    let isHorizontalPan = false;
     let isLandscapeSlide = false;
     let isHorizontalSwipe = false;
     let currentHorizontalPanel = 0;
@@ -148,23 +147,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = touchStartX - currentX;
         const diffY = touchStartY - currentY;
         
-        // For landscape slides, prioritize horizontal movement
+        // Always prevent default to handle all touch events
+        e.preventDefault();
+        
+        // For landscape slides, check if it's a horizontal or vertical swipe
         if (isLandscapeSlide) {
-            // If mostly horizontal movement
+            // If mostly horizontal movement, let the browser handle scrolling
             if (Math.abs(diffX) > Math.abs(diffY)) {
-                e.preventDefault();
                 return;
             }
-            // If mostly vertical movement, allow it for slide changes
-            else if (Math.abs(diffY) > 10) {
-                e.preventDefault();
-                return;
-            }
-        } 
-        // For portrait slides, always allow vertical movement
-        else if (Math.abs(diffY) > 0) {
-            e.preventDefault();
         }
+        
+        // For all slides, allow vertical movement for slide changes
+        return;
     }
 
     function handleTouchEnd(e) {
@@ -177,36 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = touchStartX - endX;
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         
-        // Handle landscape slide swipes
-        if (isLandscapeSlide) {
-            // If mostly vertical movement, change slides
-            if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 20) {
-                if (diffY > 0 && currentSlide < images.length - 1) {
-                    // Swipe up - go to next slide
-                    goToSlide(currentSlide + 1);
-                } else if (diffY < 0 && currentSlide > 0) {
-                    // Swipe down - go to previous slide
-                    goToSlide(currentSlide - 1);
-                }
-            }
-            // If mostly horizontal movement, snap to nearest edge
-            else if (Math.abs(diffX) > 20 && slideContent) {
-                const containerWidth = slideContent.offsetWidth;
-                const isSwipingLeft = diffX > 0; // Positive diffX means finger moved left
-                
-                slideContent.scrollTo({
-                    left: isSwipingLeft ? containerWidth : 0,
-                    behavior: 'smooth'
-                });
-            }
-            
-            isSwiping = false;
-            isHorizontalPan = false;
-            return;
-        }
-        
-        // Handle vertical swipe to change slides
-        if (Math.abs(diffY) > threshold) {
+        // Check for vertical swipes on all slides
+        if (Math.abs(diffY) > 20) {
             if (diffY > 0 && currentSlide < images.length - 1) {
                 // Swipe up - go to next slide
                 goToSlide(currentSlide + 1);
@@ -215,10 +182,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 goToSlide(currentSlide - 1);
             }
         }
+        // Handle horizontal swipes on landscape slides only
+        else if (isLandscapeSlide && slideContent && Math.abs(diffX) > 20) {
+            const containerWidth = slideContent.offsetWidth;
+            const isSwipingLeft = diffX > 0; // Positive diffX means finger moved left
+            
+            slideContent.scrollTo({
+                left: isSwipingLeft ? containerWidth : 0,
+                behavior: 'smooth'
+            });
+        }
         
         // Reset states
         isSwiping = false;
-        isHorizontalPan = false;
     }
 
     // Mouse wheel and trackpad event for desktop
