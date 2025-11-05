@@ -150,24 +150,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = startX - currentX;
         const diffY = startY - currentY;
         
-        // Determine if this is a horizontal or vertical swipe
+        // Only determine direction once at the start of a swipe
         if (!isHorizontalPan && Math.abs(diffX) > 5) {
             isHorizontalPan = true;
         }
         
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         
-        // Handle horizontal movement for landscape slides
-        if (isLandscapeSlide && isHorizontalPan) {
-            // Allow some vertical movement while panning horizontally
-            if (Math.abs(diffY) < Math.abs(diffX) * 2) {
+        // For landscape slides, handle both horizontal and vertical movement
+        if (isLandscapeSlide) {
+            if (isHorizontalPan) {
+                // If we've already determined it's a horizontal swipe, allow it
+                e.preventDefault();
+                return;
+            } else if (Math.abs(diffY) > 5) {
+                // If it's a clear vertical swipe, prevent default to allow page scrolling
                 e.preventDefault();
                 return;
             }
-        }
-        
-        // Handle vertical movement for all slides
-        if (!isHorizontalPan && Math.abs(diffY) > 10) {
+        } 
+        // For portrait slides, always allow vertical movement
+        else if (Math.abs(diffY) > 0) {
             e.preventDefault();
         }
     }
@@ -180,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const endX = touch.clientX;
         const diffY = startY - endY;
         const diffX = startX - endX;
-        const threshold = 20; // Threshold for detecting swipes
+        const threshold = 15; // Reduced threshold for more responsive swipes
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         
         // Handle landscape slide swipes
@@ -188,8 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // If it was a vertical swipe, change slides
             if (!isHorizontalPan && Math.abs(diffY) > threshold) {
                 if (diffY > 0 && currentSlide < images.length - 1) {
+                    // Swipe up - go to next slide
                     goToSlide(currentSlide + 1);
                 } else if (diffY < 0 && currentSlide > 0) {
+                    // Swipe down - go to previous slide
                     goToSlide(currentSlide - 1);
                 }
             }
