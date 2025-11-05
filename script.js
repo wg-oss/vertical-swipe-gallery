@@ -259,8 +259,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to update slide panel aspect ratio
+    function updateSlidePanelAspectRatio() {
+        const landscapeSlides = document.querySelectorAll('.landscape-slide');
+        landscapeSlides.forEach(slide => {
+            const img = slide.querySelector('img');
+            if (img) {
+                // If image is already loaded
+                if (img.complete && img.naturalWidth !== 0) {
+                    setAspectRatio(img);
+                } else {
+                    // Wait for image to load
+                    img.onload = () => setAspectRatio(img);
+                }
+            }
+        });
+    }
+
+    function setAspectRatio(img) {
+        const panel = img.closest('.slide-panel');
+        if (panel && img.naturalWidth && img.naturalHeight) {
+            // Calculate the aspect ratio of the image
+            const aspectRatio = img.naturalWidth / img.naturalHeight;
+            // Set the panel's aspect ratio to match the image
+            panel.style.aspectRatio = `${aspectRatio * 2}/1`; // Double width for two panels
+            
+            // Adjust panel size to fit within viewport
+            const viewportAspect = window.innerWidth / window.innerHeight;
+            if (aspectRatio > viewportAspect) {
+                // Image is wider than viewport
+                panel.style.width = '100%';
+                panel.style.height = 'auto';
+            } else {
+                // Image is taller than viewport
+                panel.style.width = 'auto';
+                panel.style.height = '100%';
+            }
+        }
+    }
+
     // Initialize the gallery
     initGallery();
+    
+    // Update on window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(updateSlidePanelAspectRatio, 250);
+    });
 
     // Add event listeners
     gallery.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -268,4 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gallery.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
+    
+    // Initial aspect ratio update after a short delay to ensure images are loaded
+    setTimeout(updateSlidePanelAspectRatio, 100);
 });
