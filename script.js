@@ -125,9 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Track the current panel state (0 for left, 1 for right)
-    let currentPanel = 0;
-    
     // Touch event handlers
     function handleTouchStart(e) {
         const touch = e.touches[0];
@@ -141,8 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (slideContent && slideContent.classList.contains('landscape-slide')) {
             startScrollLeft = slideContent.scrollLeft;
             isLandscapeSlide = true;
-            // Update current panel based on scroll position
-            currentPanel = slideContent.scrollLeft > (slideContent.scrollWidth / 4) ? 1 : 0;
         } else {
             isLandscapeSlide = false;
         }
@@ -163,15 +158,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         if (!slideContent) return;
         
-        // If we haven't determined the direction yet
-        if (!isHorizontalPan && isLandscapeSlide) {
-            // Check if this is a horizontal pan (more horizontal than vertical movement)
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
-                isHorizontalPan = true;
+        // For landscape slides, prioritize horizontal movement
+        if (isLandscapeSlide) {
+            // If we haven't determined direction yet
+            if (!isHorizontalPan) {
+                if (Math.abs(diffX) > 5) { // Small threshold to detect horizontal movement
+                    isHorizontalPan = true;
+                } else if (Math.abs(diffY) > 10) {
+                    // Vertical movement detected, let it propagate
+                    return;
+                }
+            }
+            
+            // Handle horizontal pan
+            if (isHorizontalPan) {
+                const newScrollLeft = startScrollLeft + diffX;
+                slideContent.scrollLeft = newScrollLeft;
                 e.preventDefault();
-                return;
-            } else if (Math.abs(diffY) > 10) {
-                // Vertical swipe - let it propagate
                 return;
             }
         }
@@ -180,9 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isHorizontalPan && Math.abs(diffY) > 10) {
             return;
         }
-        
-        e.preventDefault();
-        return;
     }
 
     function handleTouchEnd(e) {
@@ -195,29 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = startX - endX;
         const threshold = 20; // Threshold for detecting swipes
         
-        // Handle horizontal swipe for landscape slides (takes priority)
+        // Handle horizontal swipe for landscape slides
         if (isHorizontalPan && isLandscapeSlide) {
-            const slidePanel = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-panel`);
-            if (slidePanel) {
-                const viewportWidth = window.innerWidth;
-                const minSwipeDistance = viewportWidth * 0.1; // 10% of viewport width
-                
-                // Determine if the swipe was significant enough
-                if (Math.abs(diffX) > minSwipeDistance) {
-                    // Determine direction and update panel
-                    if (diffX > 0) {
-                        // Swipe left - go to next panel (right side)
-                        currentPanel = 1;
-                    } else {
-                        // Swipe right - go to previous panel (left side)
-                        currentPanel = 0;
-                    }
-                }
-                
-                // Animate to the target panel
-                const targetPosition = currentPanel * -50; // 0% for left panel, -50% for right panel
-                slidePanel.style.transform = `translateX(${targetPosition}%)`;
-                
+            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
+            if (slideContent) {
+                // Allow the scroll position to stay where it is
                 e.preventDefault();
             }
         } 
