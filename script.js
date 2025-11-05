@@ -154,32 +154,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleTouchMove(e) {
         if (!isSwiping) return;
-        e.preventDefault();
         
         const currentTouch = e.touches[0];
         const diffX = startX - currentTouch.clientX;
         const diffY = startY - currentTouch.clientY;
-        
-        // If we haven't determined the swipe direction yet, check which axis has more movement
-        if (!isHorizontalSwipe && Math.abs(diffX) > 10 && Math.abs(diffY) > 10) {
-            isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY) * 1.5;
-        }
-        
-        // If this is a horizontal swipe on a landscape slide, allow horizontal scrolling
         const isLandscapeSlide = currentSlide > 0 && currentSlide < images.length - 1;
-        if (isHorizontalSwipe && isLandscapeSlide) {
+        
+        // Prevent default to stop any page scrolling
+        e.preventDefault();
+        
+        // For landscape slides, allow both vertical and horizontal swiping
+        if (isLandscapeSlide) {
             const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
             if (slideContent) {
-                // Calculate new scroll position
+                // Check if we're at the edges of horizontal scroll
+                const atLeftEdge = slideContent.scrollLeft <= 0;
+                const atRightEdge = slideContent.scrollLeft >= (slideContent.scrollWidth - slideContent.clientWidth - 1);
+                
+                // If we're at the left edge and swiping right, or at the right edge and swiping left
+                // then allow the vertical swipe to change slides
+                if ((atLeftEdge && diffX < 0) || (atRightEdge && diffX > 0)) {
+                    // Allow vertical swipe to change slides
+                    return;
+                }
+                
+                // Otherwise, handle horizontal scrolling
                 const newScrollLeft = slideContent.scrollLeft + diffX;
-                // Limit scroll position to valid range
                 const maxScroll = slideContent.scrollWidth - slideContent.clientWidth;
                 slideContent.scrollLeft = Math.max(0, Math.min(maxScroll, newScrollLeft));
                 
-                // Update start position for next move event
+                // Update start positions for next move event
                 startX = currentTouch.clientX;
                 startY = currentTouch.clientY;
+                return;
             }
+        }
+        
+        // For vertical swipes (or non-landscape slides)
+        if (Math.abs(diffY) > 10) {
+            // Allow the swipe to continue naturally
+            return;
         }
     }
 
@@ -190,10 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const endX = e.changedTouches[0].clientX;
         const diffY = startY - endY;
         const diffX = startX - endX;
-        const threshold = 30; // Reduced threshold for more responsive swiping
+        const threshold = 30;
         
         // Check if this was a vertical swipe (for changing slides)
-        if (!isHorizontalSwipe && Math.abs(diffY) > threshold) {
+        if (Math.abs(diffY) > threshold) {
             if (diffY > 0 && currentSlide < images.length - 1) {
                 // Swipe up - go to next slide
                 goToSlide(currentSlide + 1);
@@ -205,18 +219,32 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Reset states
         isSwiping = false;
-        isHorizontalSwipe = false;
     }
 
-    // Mouse wheel event for desktop
+    // Mouse wheel and trackpad event for desktop
     function handleWheel(e) {
-        e.preventDefault();
-        if (e.deltaY > 0 && currentSlide < images.length - 1) {
+        // For landscape slides, allow horizontal scrolling with shift+wheel or trackpad
+        const isLandscapeSlide = currentSlide > 0 && currentSlide < images.length - 1;
+        
+        if (isLandscapeSlide && (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY))) {
+            // Horizontal scroll
+            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
+            if (slideContent) {
+                slideContent.scrollLeft += (e.deltaX || e.deltaY);
+                e.preventDefault();
+            }
+            return;
+        }
+        
+        // Vertical scroll for changing slides
+        if (e.deltaY > 10 && currentSlide < images.length - 1) {
             // Scroll down - go to next slide
             goToSlide(currentSlide + 1);
-        } else if (e.deltaY < 0 && currentSlide > 0) {
+            e.preventDefault();
+        } else if (e.deltaY < -10 && currentSlide > 0) {
             // Scroll up - go to previous slide
             goToSlide(currentSlide - 1);
+            e.preventDefault();
         }
     }
 

@@ -17,7 +17,8 @@ html, body {
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: black;
-    touch-action: pan-y;
+    touch-action: none; /* Let our JavaScript handle all touch events */
+    -webkit-overflow-scrolling: touch;
 }
 
 .gallery {
@@ -47,11 +48,11 @@ html, body {
     width: 100%;
     height: 100%;
     display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: auto;
     scrollbar-width: none;
+    overscroll-behavior: contain;
 }
 
 .slide-content::-webkit-scrollbar {
@@ -73,6 +74,10 @@ html, body {
     scroll-snap-align: start;
     position: relative;
     overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .slide-panel img {
