@@ -139,7 +139,8 @@ html, body {
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    touch-action: pan-x; /* Allow horizontal panning for landscape slides */
+    touch-action: pan-x;
+    scroll-snap-stop: always; /* Ensure it always stops at snap points */
 }
 
 .landscape-slide::-webkit-scrollbar {
@@ -152,8 +153,14 @@ html, body {
     display: flex;
 }
 
+.landscape-slide .slide-panel {
+    width: 200%;
+    height: 100%;
+    display: flex;
+}
+
 .landscape-slide .slide-panel img {
-    width: 100vw;
+    width: 50%;
     height: 100%;
     flex-shrink: 0;
     object-fit: contain;
@@ -163,6 +170,7 @@ html, body {
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
