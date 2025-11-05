@@ -197,10 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (isHorizontalPan && slideContent) {
                 const scrollLeft = slideContent.scrollLeft;
                 const containerWidth = slideContent.offsetWidth;
-                const shouldScrollRight = diffX < 0; // Swiped left
+                const isSwipingLeft = diffX > 0; // Positive diffX means finger moved left, so content should move right
                 
                 slideContent.scrollTo({
-                    left: shouldScrollRight ? containerWidth : 0,
+                    left: isSwipingLeft ? containerWidth : 0,
                     behavior: 'smooth'
                 });
             }
