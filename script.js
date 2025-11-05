@@ -128,16 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Touch event handlers
     function handleTouchStart(e) {
         const touch = e.touches[0];
-        startY = touch.clientY;
-        startX = touch.clientX;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
         isSwiping = true;
-        isHorizontalPan = false;
         
         // Get the current slide content
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         isLandscapeSlide = slideContent && slideContent.classList.contains('landscape-slide');
         
-        // Always prevent default to handle all touch events consistently
         e.preventDefault();
     }
 
@@ -147,24 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const touch = e.touches[0];
         const currentX = touch.clientX;
         const currentY = touch.clientY;
-        const diffX = startX - currentX;
-        const diffY = startY - currentY;
+        const diffX = touchStartX - currentX;
+        const diffY = touchStartY - currentY;
         
-        // Only determine direction once at the start of a swipe
-        if (!isHorizontalPan && Math.abs(diffX) > 5) {
-            isHorizontalPan = true;
-        }
-        
-        const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
-        
-        // For landscape slides, handle both horizontal and vertical movement
+        // For landscape slides, prioritize horizontal movement
         if (isLandscapeSlide) {
-            if (isHorizontalPan) {
-                // If we've already determined it's a horizontal swipe, allow it
+            // If mostly horizontal movement
+            if (Math.abs(diffX) > Math.abs(diffY)) {
                 e.preventDefault();
                 return;
-            } else if (Math.abs(diffY) > 5) {
-                // If it's a clear vertical swipe, prevent default to allow page scrolling
+            }
+            // If mostly vertical movement, allow it for slide changes
+            else if (Math.abs(diffY) > 10) {
                 e.preventDefault();
                 return;
             }
@@ -181,15 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const touch = e.changedTouches[0];
         const endY = touch.clientY;
         const endX = touch.clientX;
-        const diffY = startY - endY;
-        const diffX = startX - endX;
-        const threshold = 15; // Reduced threshold for more responsive swipes
+        const diffY = touchStartY - endY;
+        const diffX = touchStartX - endX;
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         
         // Handle landscape slide swipes
         if (isLandscapeSlide) {
-            // If it was a vertical swipe, change slides
-            if (!isHorizontalPan && Math.abs(diffY) > threshold) {
+            // If mostly vertical movement, change slides
+            if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 20) {
                 if (diffY > 0 && currentSlide < images.length - 1) {
                     // Swipe up - go to next slide
                     goToSlide(currentSlide + 1);
@@ -198,11 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     goToSlide(currentSlide - 1);
                 }
             }
-            // If it was a horizontal swipe, snap to nearest edge
-            else if (isHorizontalPan && slideContent) {
-                const scrollLeft = slideContent.scrollLeft;
+            // If mostly horizontal movement, snap to nearest edge
+            else if (Math.abs(diffX) > 20 && slideContent) {
                 const containerWidth = slideContent.offsetWidth;
-                const isSwipingLeft = diffX > 0; // Positive diffX means finger moved left, so content should move right
+                const isSwipingLeft = diffX > 0; // Positive diffX means finger moved left
                 
                 slideContent.scrollTo({
                     left: isSwipingLeft ? containerWidth : 0,
