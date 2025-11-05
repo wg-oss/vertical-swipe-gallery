@@ -150,6 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
         startY = e.touches[0].clientY;
         startX = e.touches[0].clientX;
         isSwiping = true;
+        
+        // Prevent default to stop any page scrolling
+        e.preventDefault();
     }
 
     function handleTouchMove(e) {
@@ -163,27 +166,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Prevent default to stop any page scrolling
         e.preventDefault();
         
-        // For landscape slides, allow both vertical and horizontal swiping
+        // For landscape slides, handle both vertical and horizontal swipes
         if (isLandscapeSlide) {
             const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
             if (slideContent) {
-                // Check if we're at the edges of horizontal scroll
                 const atLeftEdge = slideContent.scrollLeft <= 0;
                 const atRightEdge = slideContent.scrollLeft >= (slideContent.scrollWidth - slideContent.clientWidth - 1);
                 
-                // If we're at the left edge and swiping right, or at the right edge and swiping left
-                // then allow the vertical swipe to change slides
+                // If we're at the edges, allow vertical swipes to change slides
                 if ((atLeftEdge && diffX < 0) || (atRightEdge && diffX > 0)) {
                     // Allow vertical swipe to change slides
                     return;
                 }
                 
                 // Otherwise, handle horizontal scrolling
-                const newScrollLeft = slideContent.scrollLeft + diffX;
-                const maxScroll = slideContent.scrollWidth - slideContent.clientWidth;
-                slideContent.scrollLeft = Math.max(0, Math.min(maxScroll, newScrollLeft));
-                
-                // Update start positions for next move event
+                slideContent.scrollLeft += diffX;
                 startX = currentTouch.clientX;
                 startY = currentTouch.clientY;
                 return;
@@ -192,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // For vertical swipes (or non-landscape slides)
         if (Math.abs(diffY) > 10) {
-            // Allow the swipe to continue naturally
+            // Allow vertical swipe to change slides
             return;
         }
     }
@@ -201,10 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isSwiping) return;
         
         const endY = e.changedTouches[0].clientY;
-        const endX = e.changedTouches[0].clientX;
         const diffY = startY - endY;
-        const diffX = startX - endX;
-        const threshold = 30;
+        const threshold = 20; // Reduced threshold for better responsiveness
         
         // Check if this was a vertical swipe (for changing slides)
         if (Math.abs(diffY) > threshold) {
@@ -226,14 +221,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // For landscape slides, allow horizontal scrolling with shift+wheel or trackpad
         const isLandscapeSlide = currentSlide > 0 && currentSlide < images.length - 1;
         
-        if (isLandscapeSlide && (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY))) {
-            // Horizontal scroll
+        if (isLandscapeSlide) {
             const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
             if (slideContent) {
-                slideContent.scrollLeft += (e.deltaX || e.deltaY);
-                e.preventDefault();
+                // Check if we're at the edges of horizontal scroll
+                const atLeftEdge = slideContent.scrollLeft <= 0;
+                const atRightEdge = slideContent.scrollWidth - slideContent.clientWidth - slideContent.scrollLeft < 1;
+                
+                // If we're at the edges, allow vertical scroll to change slides
+                if ((atLeftEdge && e.deltaX > 0) || (atRightEdge && e.deltaX < 0)) {
+                    // Allow vertical scroll to change slides
+                } else if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                    // Horizontal scroll
+                    slideContent.scrollLeft += (e.deltaX || e.deltaY);
+                    e.preventDefault();
+                    return;
+                }
             }
-            return;
         }
         
         // Vertical scroll for changing slides
