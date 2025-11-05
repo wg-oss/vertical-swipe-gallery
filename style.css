@@ -23,7 +23,7 @@ html, body {
     -webkit-touch-callout: none;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
-    touch-action: none; /* Disable default touch actions */
+    touch-action: pan-y; /* Allow vertical panning by default */
 }
 
 .gallery {
@@ -139,6 +139,7 @@ html, body {
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    touch-action: pan-x; /* Allow horizontal panning for landscape slides */
 }
 
 .landscape-slide::-webkit-scrollbar {

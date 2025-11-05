@@ -138,12 +138,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (slideContent && slideContent.classList.contains('landscape-slide')) {
             startScrollLeft = slideContent.scrollLeft;
             isLandscapeSlide = true;
+            // Allow default for landscape slides to enable native scrolling
+            return;
         } else {
             isLandscapeSlide = false;
+            // Prevent default for non-landscape slides to handle vertical swiping
+            e.preventDefault();
         }
-        
-        // Prevent default to stop any page scrolling
-        e.preventDefault();
     }
 
     function handleTouchMove(e) {
@@ -158,30 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
         if (!slideContent) return;
         
-        // For landscape slides, prioritize horizontal movement
+        // For landscape slides, let the native horizontal scrolling handle it
         if (isLandscapeSlide) {
-            // If we haven't determined direction yet
-            if (!isHorizontalPan) {
-                if (Math.abs(diffX) > 5) { // Small threshold to detect horizontal movement
-                    isHorizontalPan = true;
-                } else if (Math.abs(diffY) > 10) {
-                    // Vertical movement detected, let it propagate
-                    return;
-                }
-            }
-            
-            // Handle horizontal pan
-            if (isHorizontalPan) {
-                const newScrollLeft = startScrollLeft + diffX;
-                slideContent.scrollLeft = newScrollLeft;
-                e.preventDefault();
-                return;
-            }
+            return; // Let the browser handle the scrolling
         }
         
-        // For vertical swipes (non-landscape or intentional vertical swipes)
-        if (!isHorizontalPan && Math.abs(diffY) > 10) {
-            return;
+        // For vertical swipes (non-landscape slides)
+        if (Math.abs(diffY) > 10) {
+            e.preventDefault();
         }
     }
 
@@ -195,16 +180,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = startX - endX;
         const threshold = 20; // Threshold for detecting swipes
         
-        // Handle horizontal swipe for landscape slides
-        if (isHorizontalPan && isLandscapeSlide) {
-            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
-            if (slideContent) {
-                // Allow the scroll position to stay where it is
-                e.preventDefault();
-            }
-        } 
-        // Handle vertical swipe to change slides (only if not a horizontal swipe)
-        else if (Math.abs(diffY) > threshold) {
+        // For landscape slides, don't interfere with native scrolling
+        if (isLandscapeSlide) {
+            isSwiping = false;
+            isHorizontalPan = false;
+            return;
+        }
+        
+        // Handle vertical swipe to change slides
+        if (Math.abs(diffY) > threshold) {
             if (diffY > 0 && currentSlide < images.length - 1) {
                 // Swipe up - go to next slide
                 goToSlide(currentSlide + 1);
