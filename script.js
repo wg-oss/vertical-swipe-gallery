@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         images.forEach((src, index) => {
             const slide = document.createElement('div');
             slide.className = 'slide';
+            slide.dataset.index = index; // Add data-index for easier selection
             slide.style.transform = `translateY(${index * 100}%)`;
             
             const slideContent = document.createElement('div');
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 leftImg.src = src;
                 leftImg.alt = `Image ${index + 1} - Left`;
                 leftImg.loading = 'lazy';
+                leftImg.style.pointerEvents = 'none';
                 leftPanel.appendChild(leftImg);
                 
                 // Create right panel (second half of image)
@@ -66,10 +68,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 rightImg.src = src;
                 rightImg.alt = `Image ${index + 1} - Right`;
                 rightImg.loading = 'lazy';
+                rightImg.style.pointerEvents = 'none';
                 rightPanel.appendChild(rightImg);
                 
                 slideContent.appendChild(leftPanel);
                 slideContent.appendChild(rightPanel);
+                
+                // Enable horizontal scrolling for landscape slides
+                slideContent.style.overflowX = 'auto';
+                slideContent.style.touchAction = 'pan-x';
                 
                 // Initialize scroll position to first panel
                 setTimeout(() => {
@@ -86,11 +93,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.style.width = '100%';
                 img.style.height = '100%';
                 img.style.objectFit = 'contain';
+                img.style.pointerEvents = 'none';
                 panel.appendChild(img);
                 slideContent.appendChild(panel);
                 
                 // Disable horizontal scrolling for non-landscape slides
                 slideContent.style.overflowX = 'hidden';
+                slideContent.style.touchAction = 'pan-y';
             }
             
             slide.appendChild(slideContent);
@@ -146,15 +155,31 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleTouchMove(e) {
         if (!isSwiping) return;
         e.preventDefault();
-        const endX = e.touches[0].clientX;
-        const diffX = startX - endX;
-        const diffY = startY - e.touches[0].clientY;
-        const threshold = 50; // Minimum swipe distance to change slide
         
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-            isHorizontalSwipe = true;
-        } else {
-            isHorizontalSwipe = false;
+        const currentTouch = e.touches[0];
+        const diffX = startX - currentTouch.clientX;
+        const diffY = startY - currentTouch.clientY;
+        
+        // If we haven't determined the swipe direction yet, check which axis has more movement
+        if (!isHorizontalSwipe && Math.abs(diffX) > 10 && Math.abs(diffY) > 10) {
+            isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY) * 1.5;
+        }
+        
+        // If this is a horizontal swipe on a landscape slide, allow horizontal scrolling
+        const isLandscapeSlide = currentSlide > 0 && currentSlide < images.length - 1;
+        if (isHorizontalSwipe && isLandscapeSlide) {
+            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
+            if (slideContent) {
+                // Calculate new scroll position
+                const newScrollLeft = slideContent.scrollLeft + diffX;
+                // Limit scroll position to valid range
+                const maxScroll = slideContent.scrollWidth - slideContent.clientWidth;
+                slideContent.scrollLeft = Math.max(0, Math.min(maxScroll, newScrollLeft));
+                
+                // Update start position for next move event
+                startX = currentTouch.clientX;
+                startY = currentTouch.clientY;
+            }
         }
     }
 
@@ -162,32 +187,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isSwiping) return;
         
         const endY = e.changedTouches[0].clientY;
+        const endX = e.changedTouches[0].clientX;
         const diffY = startY - endY;
-        const diffX = startX - e.changedTouches[0].clientX;
-        const threshold = 50; // Minimum swipe distance to change slide
+        const diffX = startX - endX;
+        const threshold = 30; // Reduced threshold for more responsive swiping
         
-        if (isHorizontalSwipe) {
-            if (Math.abs(diffX) > threshold) {
-                if (diffX > 0 && currentHorizontalPanel < 2) {
-                    // Swipe right - go to next horizontal panel
-                    currentHorizontalPanel++;
-                } else if (diffX < 0 && currentHorizontalPanel > 0) {
-                    // Swipe left - go to previous horizontal panel
-                    currentHorizontalPanel--;
-                }
-            }
-        } else {
-            if (Math.abs(diffY) > threshold) {
-                if (diffY > 0 && currentSlide < images.length - 1) {
-                    // Swipe up - go to next slide
-                    goToSlide(currentSlide + 1);
-                } else if (diffY < 0 && currentSlide > 0) {
-                    // Swipe down - go to previous slide
-                    goToSlide(currentSlide - 1);
-                }
+        // Check if this was a vertical swipe (for changing slides)
+        if (!isHorizontalSwipe && Math.abs(diffY) > threshold) {
+            if (diffY > 0 && currentSlide < images.length - 1) {
+                // Swipe up - go to next slide
+                goToSlide(currentSlide + 1);
+            } else if (diffY < 0 && currentSlide > 0) {
+                // Swipe down - go to previous slide
+                goToSlide(currentSlide - 1);
             }
         }
         
+        // Reset states
         isSwiping = false;
         isHorizontalSwipe = false;
     }

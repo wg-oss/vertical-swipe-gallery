@@ -77,16 +77,23 @@ html, body {
 
 .slide-panel img {
     display: block;
-    width: 200%;
+    width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: left top;
+    object-fit: contain;
+    object-position: center;
     pointer-events: none;
     user-select: none;
 }
 
-/* Second panel shows right half of the image */
-.slide-panel:last-child img {
+/* For landscape images (middle slides) */
+.slide:nth-child(n+2):nth-last-child(n+2) .slide-panel img {
+    width: 200%;
+    object-fit: cover;
+    object-position: left top;
+}
+
+/* Second panel shows right half of the landscape image */
+.slide:nth-child(n+2):nth-last-child(n+2) .slide-panel:last-child img {
     object-position: right top;
     margin-left: -100%;
 }
