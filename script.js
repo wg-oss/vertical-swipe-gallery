@@ -125,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Track the current panel state (0 for left, 1 for right)
+    let currentPanel = 0;
+    
     // Touch event handlers
     function handleTouchStart(e) {
         const touch = e.touches[0];
@@ -138,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (slideContent && slideContent.classList.contains('landscape-slide')) {
             startScrollLeft = slideContent.scrollLeft;
             isLandscapeSlide = true;
+            // Update current panel based on scroll position
+            currentPanel = slideContent.scrollLeft > (slideContent.scrollWidth / 4) ? 1 : 0;
         } else {
             isLandscapeSlide = false;
         }
@@ -155,31 +160,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = startX - currentX;
         const diffY = startY - currentY;
         
+        const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
+        if (!slideContent) return;
+        
         // If we haven't determined the direction yet
         if (!isHorizontalPan && isLandscapeSlide) {
             // Check if this is a horizontal pan (more horizontal than vertical movement)
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 5) {
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
                 isHorizontalPan = true;
-            }
-        }
-        
-        // Handle horizontal pan for landscape slides
-        if (isHorizontalPan && isLandscapeSlide) {
-            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
-            if (slideContent) {
-                const newScrollLeft = startScrollLeft + diffX;
-                slideContent.scrollLeft = newScrollLeft;
                 e.preventDefault();
+                return;
+            } else if (Math.abs(diffY) > 10) {
+                // Vertical swipe - let it propagate
                 return;
             }
         }
         
         // For vertical swipes (non-landscape or intentional vertical swipes)
         if (!isHorizontalPan && Math.abs(diffY) > 10) {
-            // Prevent default to stop any page scrolling
-            e.preventDefault();
             return;
         }
+        
+        e.preventDefault();
+        return;
     }
 
     function handleTouchEnd(e) {
@@ -192,8 +195,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = startX - endX;
         const threshold = 20; // Threshold for detecting swipes
         
-        // Handle vertical swipe to change slides
-        if (!isHorizontalPan && Math.abs(diffY) > threshold) {
+        // Handle horizontal swipe for landscape slides (takes priority)
+        if (isHorizontalPan && isLandscapeSlide) {
+            const slideContent = document.querySelector(`.slide[data-index="${currentSlide}"] .slide-content`);
+            if (slideContent) {
+                const viewportWidth = window.innerWidth;
+                const minSwipeDistance = viewportWidth * 0.1; // 10% of viewport width
+                
+                // Determine if the swipe was significant enough
+                if (Math.abs(diffX) > minSwipeDistance) {
+                    // Determine direction and update panel
+                    if (diffX > 0) {
+                        // Swipe left - go to next panel
+                        currentPanel = Math.min(currentPanel + 1, 1);
+                    } else {
+                        // Swipe right - go to previous panel
+                        currentPanel = Math.max(currentPanel - 1, 0);
+                    }
+                }
+                
+                // Animate to the target panel
+                const targetScroll = currentPanel * viewportWidth;
+                slideContent.scrollTo({
+                    left: targetScroll,
+                    behavior: 'smooth'
+                });
+                
+                e.preventDefault();
+            }
+        } 
+        // Handle vertical swipe to change slides (only if not a horizontal swipe)
+        else if (Math.abs(diffY) > threshold) {
             if (diffY > 0 && currentSlide < images.length - 1) {
                 // Swipe up - go to next slide
                 goToSlide(currentSlide + 1);
