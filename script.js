@@ -279,22 +279,42 @@ document.addEventListener('DOMContentLoaded', () => {
     function setAspectRatio(img) {
         const panel = img.closest('.slide-panel');
         if (panel && img.naturalWidth && img.naturalHeight) {
-            // Calculate the aspect ratio of the image
-            const aspectRatio = img.naturalWidth / img.naturalHeight;
-            // Set the panel's aspect ratio to match the image
-            panel.style.aspectRatio = `${aspectRatio * 2}/1`; // Double width for two panels
+            // Define a fixed aspect ratio for landscape slides (e.g., 16:9 for each half)
+            // Since each landscape image is split into two panels, we'll use half the width
+            const targetAspectRatio = 8/9; // This is half of 16:9 (each panel is 8:9)
             
-            // Adjust panel size to fit within viewport
-            const viewportAspect = window.innerWidth / window.innerHeight;
-            if (aspectRatio > viewportAspect) {
-                // Image is wider than viewport
-                panel.style.width = '100%';
-                panel.style.height = 'auto';
+            // Get viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate dimensions based on the target aspect ratio
+            let panelWidth, panelHeight;
+            
+            // Calculate how the panel would look with the target aspect ratio
+            const heightForFullWidth = viewportWidth / 2 / targetAspectRatio;
+            const widthForFullHeight = viewportHeight * targetAspectRatio * 2;
+            
+            if (heightForFullWidth <= viewportHeight) {
+                // Width is the limiting factor
+                panelWidth = viewportWidth;
+                panelHeight = heightForFullWidth;
             } else {
-                // Image is taller than viewport
-                panel.style.width = 'auto';
-                panel.style.height = '100%';
+                // Height is the limiting factor
+                panelWidth = widthForFullHeight;
+                panelHeight = viewportHeight;
             }
+            
+            // Apply the calculated dimensions
+            panel.style.width = `${panelWidth}px`;
+            panel.style.height = `${panelHeight}px`;
+            
+            // Set a fixed aspect ratio for the panel
+            panel.style.aspectRatio = `${targetAspectRatio * 2}/1`; // Full width aspect ratio
+            
+            // Ensure the image fills the panel while maintaining aspect ratio
+            img.style.width = '200%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
         }
     }
 
